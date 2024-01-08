@@ -1,0 +1,39 @@
+---
+- name: cronjob playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: install python3
+      ansible.builtin.apt:
+        name: python3
+        state: present
+        update_cache: yes
+
+    - name: install pip
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: install psutil library
+      ansible.builtin.pip:
+        name: psutil
+        state: present
+
+    - name: copy script to remote
+      ansible.builtin.template:
+        src: disk-monitoring.py
+        dest: /home/ubuntu/
+
+    - name: add crontab entry
+      ansible.builtin.cron:
+        name: "diskMonitoringScript"
+        user: ubuntu
+        minute: 30
+        hour: 6
+        job: "python3 /home/ubuntu/disk-monitoring.py"
+
+    - name: set up environment variable
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        line: EMAIL_PASSWORD="{{EMAIL_PASSWORD}}"
